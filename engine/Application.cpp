@@ -1,4 +1,5 @@
-#include "Application.h"
+#include <engine/Application.h>
+#include <engine/core/Logger.h>
 
 #include <iostream>
 
@@ -13,6 +14,5 @@ namespace Walrus
 
     void Application::Run()
     {
-        std::cout << "Walrus engine running with " << Args.Count << " argument(s)." << std::endl;
     }
 } // namespace Walrus

@@ -1,4 +1,5 @@
-#include "../engine/EntryPoint.h"
+#include <engine/EntryPoint.h>
+#include <engine/core/Logger.h>
 
 #include <iostream>
 
@@ -12,7 +13,13 @@ public:
 
     void Run() override
     {
-        std::cout << "Game started through the Walrus engine." << std::endl;
+        WFATAL("A test message: %f", 3.14f);
+        WERROR("A test message: %f", 3.14f);
+        WWARN("A test message: %f", 3.14f);
+        WINFO("A test message: %f", 3.14f);
+        WDEBUG("A test message: %f", 3.14f);
+        WTRACE("A test message: %f", 3.14f);
+
         Walrus::Application::Run();
     }
 };
