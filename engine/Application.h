@@ -10,7 +10,7 @@ namespace Walrus
         char** Args = nullptr;
     };
 
-    class Application
+    class WAPI Application
     {
     public:
         explicit Application(ApplicationCommandLineArgs args = {});

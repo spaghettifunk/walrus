@@ -1,7 +1,7 @@
 # Walrus
 
 Walrus is an early C++ game engine scaffold. The project is split into an
-`engine` static library and a `game` executable that links against it.
+`engine` dynamic library and a `game` executable that links against it.
 
 The engine owns the program entrypoint in `engine/EntryPoint.cpp`. The game
 defines `Walrus::CreateApplication(...)`, and the engine calls that function to
@@ -47,6 +47,10 @@ make BACKEND=metal
 ```
 
 Every build runs `clang-format` first.
+
+The engine builds as `build/lib/libwalrus.dylib` on macOS and
+`build/lib/libwalrus.so` on Linux. Symbols are hidden by default, and public
+engine API should be marked with `WAPI`.
 
 ## Running
 

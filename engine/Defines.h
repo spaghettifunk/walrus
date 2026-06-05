@@ -71,7 +71,7 @@ STATIC_ASSERT(sizeof(f64) == 8, "Expected f64 to be 8 bytes.");
 #error "Unknown platform!"
 #endif
 
-#ifdef WEXPORT
+#ifdef WALRUS_EXPORT
 // Exports
 #ifdef _MSC_VER
 #define WAPI __declspec(dllexport)
