@@ -49,11 +49,13 @@ SHARED_LIB_EXT := dylib
 ENGINE_SONAME := libwalrus.$(SHARED_LIB_EXT)
 ENGINE_SHARED_LDFLAGS := -dynamiclib -install_name @rpath/$(ENGINE_SONAME)
 GAME_RPATH_LDFLAGS := -Wl,-rpath,@executable_path/../lib
+PLATFORM_LDFLAGS :=
 else
 SHARED_LIB_EXT := so
 ENGINE_SONAME := libwalrus.$(SHARED_LIB_EXT)
 ENGINE_SHARED_LDFLAGS := -shared -Wl,-soname,$(ENGINE_SONAME)
 GAME_RPATH_LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib'
+PLATFORM_LDFLAGS := -lX11 -lX11-xcb -lxcb
 endif
 
 # Final output paths.
@@ -126,7 +128,7 @@ $(VULKAN_BIN): $(VULKAN_GAME_OBJECTS) $(ENTRYPOINT_OBJECT) $(ENGINE_LIB)
 # Link the engine dynamic library from engine implementation objects.
 $(ENGINE_LIB): $(ENGINE_OBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $(ENGINE_CXXFLAGS) $(ENGINE_SHARED_LDFLAGS) $(ENGINE_OBJECTS) -o $@
+	$(CXX) $(ENGINE_CXXFLAGS) $(ENGINE_SHARED_LDFLAGS) $(ENGINE_OBJECTS) -o $@ $(PLATFORM_LDFLAGS)
 
 # Compile engine implementation files with WALRUS_EXPORT so WAPI marks public
 # symbols for export from the dynamic library.

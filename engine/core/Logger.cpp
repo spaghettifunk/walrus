@@ -21,7 +21,6 @@ namespace Walrus
         case LogLevel::Trace:
             return "\033[32m[TRACE]";
         }
-
         return "UNKNOWN";
     }
 
