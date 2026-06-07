@@ -27,7 +27,7 @@ namespace Walrus
         Application(const Application&) = delete;
         Application& operator=(const Application&) = delete;
 
-        virtual void Run();
+        void Run();
 
     protected:
         virtual bool OnInitialize()
@@ -48,9 +48,10 @@ namespace Walrus
 
     private:
         ApplicationSpecification m_Specification;
-        std::unique_ptr<Window> m_Window;
+        Window* m_Window;
         bool m_Running = false;
         bool m_Suspended = false;
+        bool m_Initialized = false;
         f64 m_LastTime = 0.0;
     };
 } // namespace Walrus

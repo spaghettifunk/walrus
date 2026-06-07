@@ -1,5 +1,6 @@
 #include <engine/core/Application.h>
 #include <engine/core/Logger.h>
+#include <engine/core/Memory.h>
 #include <engine/platform/Platform.h>
 #include <engine/window/Window.h>
 
@@ -10,22 +11,32 @@ namespace Walrus
     Application::Application(ApplicationSpecification specs)
         : m_Specification(specs)
     {
+        WFATAL("A test message: {}", 3.14f);
+        WERROR("A test message: {}", 3.14f);
+        WWARN("A test message: {}", 3.14f);
+        WINFO("A test message: {}", 3.14f);
+        WDEBUG("A test message: {}", 3.14f);
+        WTRACE("A test message: {}", 3.14f);
+
+        m_Running = true;
+        m_Suspended = false;
+
+        m_Window = Walrus::New<Window>(
+            Walrus::MemoryTag::MEMORY_TAG_APPLICATION,
+            m_Specification.Name,
+            m_Specification.StartX,
+            m_Specification.StartY,
+            m_Specification.Width,
+            m_Specification.Height);
+
+        m_Initialized = true;
     }
 
     Application::~Application() = default;
 
     void Application::Run()
     {
-        WFATAL("A test message: %f", 3.14f);
-        WERROR("A test message: %f", 3.14f);
-        WWARN("A test message: %f", 3.14f);
-        WINFO("A test message: %f", 3.14f);
-        WDEBUG("A test message: %f", 3.14f);
-        WTRACE("A test message: %f", 3.14f);
-
-        m_Running = true;
-        m_Window = std::make_unique<Window>(
-            m_Specification.Name, m_Specification.StartX, m_Specification.StartY, m_Specification.Width, m_Specification.Height);
+        WINFO(Memory::GetMemoryUsageStr());
 
         if (!OnInitialize())
             return;
@@ -53,5 +64,9 @@ namespace Walrus
                     break;
             }
         }
+
+        m_Running = false;
+
+        Walrus::Delete(m_Window, Walrus::MemoryTag::MEMORY_TAG_APPLICATION);
     }
 } // namespace Walrus
