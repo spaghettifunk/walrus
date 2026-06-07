@@ -9,8 +9,9 @@ namespace Walrus
         return true;
     }
 
-    bool GameApplication::OnUpdate(f32)
+    bool GameApplication::OnUpdate(f32 deltaTime)
     {
+        m_State->DeltaTime = deltaTime;
         return true;
     }
 
@@ -25,6 +26,7 @@ namespace Walrus
 
     Application* CreateApplication(ApplicationSpecification specs)
     {
-        return new GameApplication(specs);
+        auto* game = Walrus::New<GameApplication>(Walrus::MemoryTag::MEMORY_TAG_GAME, specs);
+        return game;
     }
 } // namespace Walrus

@@ -11,13 +11,14 @@ int main(int argc, char** argv)
 
     Walrus::Memory::Initialize();
 
-    auto* application = Walrus::CreateApplication(Walrus::ApplicationSpecification{
-        .Name = "Walrus Engine Test",
-        .StartX = 100,
-        .StartY = 100,
-        .Width = 1280,
-        .Height = 720,
-    });
+    auto* application = Walrus::CreateApplication(
+        Walrus::ApplicationSpecification{
+            .Name = "Walrus Engine Test",
+            .StartX = 100,
+            .StartY = 100,
+            .Width = 1280,
+            .Height = 720,
+        });
     if (!application)
     {
         WFATAL("Walrus: CreateApplication returned null.");
@@ -26,7 +27,7 @@ int main(int argc, char** argv)
     }
 
     application->Run();
-    delete application;
+    Walrus::Delete(application, Walrus::MemoryTag::MEMORY_TAG_GAME);
 
     Walrus::Memory::Shutdown();
 

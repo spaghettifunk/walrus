@@ -44,4 +44,18 @@ namespace Walrus
 
         static std::string GetMemoryUsageStr();
     };
+
+    template<typename T, typename... Args>
+    T* New(MemoryTag tag, Args&&... args)
+    {
+        void* memory = Memory::Allocate(sizeof(T), tag);
+        return new (memory) T(std::forward<Args>(args)...);
+    }
+
+    template<typename T>
+    void Delete(T* object, MemoryTag tag)
+    {
+        object->~T();
+        Memory::Free(object, sizeof(T), tag);
+    }
 } // namespace Walrus
