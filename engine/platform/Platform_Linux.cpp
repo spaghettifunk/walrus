@@ -32,6 +32,7 @@ namespace Walrus
         xcb_screen_t* screen = nullptr;
         xcb_atom_t wmProtocols = 0;
         xcb_atom_t wmDeleteWin = 0;
+        bool initialized = false;
     };
 
     Platform::Platform(std::string applicationName, i32 x, i32 y, i32 width, i32 height)
@@ -39,6 +40,11 @@ namespace Walrus
     {
         // Connect to X
         m_State->display = XOpenDisplay(NULL);
+        if (!m_State->display)
+        {
+            WFATAL("Failed to open X display. Is DISPLAY set?");
+            return;
+        }
 
         // Turn off key repeats.
         XAutoRepeatOff(m_State->display);
@@ -46,13 +52,19 @@ namespace Walrus
         // Retrieve the connection from the display.
         m_State->connection = XGetXCBConnection(m_State->display);
 
-        if (xcb_connection_has_error(m_State->connection))
+        if (!m_State->connection || xcb_connection_has_error(m_State->connection))
         {
             WFATAL("Failed to connect to X server via XCB.");
+            return;
         }
 
         // Get data from the X server
         const struct xcb_setup_t* setup = xcb_get_setup(m_State->connection);
+        if (!setup)
+        {
+            WFATAL("Failed to get XCB setup data.");
+            return;
+        }
 
         // Loop through screens using iterator
         xcb_screen_iterator_t it = xcb_setup_roots_iterator(setup);
@@ -64,6 +76,11 @@ namespace Walrus
 
         // After screens have been looped through, assign it.
         m_State->screen = it.data;
+        if (!m_State->screen)
+        {
+            WFATAL("Failed to get XCB screen.");
+            return;
+        }
 
         // Allocate a XID for the window to be created.
         m_State->window = xcb_generate_id(m_State->connection);
@@ -104,8 +121,8 @@ namespace Walrus
             XCB_ATOM_WM_NAME,
             XCB_ATOM_STRING,
             8, // data should be viewed 8 bits at a time
-            strlen(applicationName),
-            applicationName);
+            applicationName.size(),
+            applicationName.c_str());
 
         // Tell the server to notify when the window manager
         // attempts to destroy the window.
@@ -113,11 +130,22 @@ namespace Walrus
         xcb_intern_atom_cookie_t wmProtocolsCookie = xcb_intern_atom(m_State->connection, 0, strlen("WM_PROTOCOLS"), "WM_PROTOCOLS");
         xcb_intern_atom_reply_t* wmDeleteReply = xcb_intern_atom_reply(m_State->connection, wmDeleteCookie, NULL);
         xcb_intern_atom_reply_t* wmProtocolsReply = xcb_intern_atom_reply(m_State->connection, wmProtocolsCookie, NULL);
+        if (!wmDeleteReply || !wmProtocolsReply)
+        {
+            WFATAL("Failed to get window manager protocol atoms.");
+            free(wmDeleteReply);
+            free(wmProtocolsReply);
+            return;
+        }
+
         m_State->wmDeleteWin = wmDeleteReply->atom;
         m_State->wmProtocols = wmProtocolsReply->atom;
 
         xcb_change_property(
             m_State->connection, XCB_PROP_MODE_REPLACE, m_State->window, wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
+
+        free(wmDeleteReply);
+        free(wmProtocolsReply);
 
         // Map the window to the screen
         xcb_map_window(m_State->connection, m_State->window);
@@ -127,19 +155,44 @@ namespace Walrus
         if (stream_result <= 0)
         {
             WFATAL("An error occurred when flusing the stream: %d", stream_result);
+            return;
         }
+
+        m_State->initialized = true;
     }
 
     Platform::~Platform()
     {
-        // Turn key repeats back on since this is global for the OS... just... wow.
-        XAutoRepeatOn(m_State->display);
+        if (!m_State)
+        {
+            return;
+        }
 
-        xcb_destroy_window(m_State->connection, m_State->window);
+        if (m_State->display)
+        {
+            // Turn key repeats back on since this is global for the OS... just... wow.
+            XAutoRepeatOn(m_State->display);
+        }
+
+        if (m_State->connection && m_State->window)
+        {
+            xcb_destroy_window(m_State->connection, m_State->window);
+            xcb_flush(m_State->connection);
+        }
+
+        if (m_State->display)
+        {
+            XCloseDisplay(m_State->display);
+        }
     }
 
     bool Platform::PumpMessages()
     {
+        if (!m_State || !m_State->initialized)
+        {
+            return false;
+        }
+
         xcb_generic_event_t* event;
         xcb_client_message_event_t* cm;
 
@@ -162,6 +215,7 @@ namespace Walrus
                 {
                     // TODO: Mouse button presses and releases
                 }
+                break;
             case XCB_MOTION_NOTIFY:
                 // TODO: mouse movement
                 break;
@@ -170,6 +224,7 @@ namespace Walrus
                 {
                     // TODO: Resizing
                 }
+                break;
 
             case XCB_CLIENT_MESSAGE:
                 {
@@ -194,10 +249,12 @@ namespace Walrus
 
     void* Platform::Allocate(u64 size, bool aligned)
     {
+        (void)aligned;
         return malloc(size);
     }
     void Platform::Free(void* block, bool aligned)
     {
+        (void)aligned;
         free(block);
     }
     void* Platform::ZeroMemory(void* block, u64 size)
@@ -217,13 +274,13 @@ namespace Walrus
     {
         // FATAL,ERROR,WARN,INFO,DEBUG,TRACE
         std::string colourStrings[] = { "0;41", "1;31", "1;33", "1;32", "1;34", "1;30" };
-        printf("\033[%sm%s\033[0m", colourStrings[colour], message);
+        printf("\033[%sm%s\033[0m", colourStrings[colour].c_str(), message.c_str());
     }
     void Platform::ConsoleWriteError(std::string message, u8 colour)
     {
         // FATAL,ERROR,WARN,INFO,DEBUG,TRACE
         std::string colourStrings[] = { "0;41", "1;31", "1;33", "1;32", "1;34", "1;30" };
-        printf("\033[%sm%s\033[0m", colourStrings[colour], message);
+        printf("\033[%sm%s\033[0m", colourStrings[colour].c_str(), message.c_str());
     }
 
     double Platform::GetAbsoluteTime()

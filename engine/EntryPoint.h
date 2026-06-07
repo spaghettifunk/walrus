@@ -1,8 +1,8 @@
 #pragma once
 
-#include <engine/Application.h>
+#include <engine/core/Application.h>
 
 namespace Walrus
 {
-    Application* CreateApplication(ApplicationCommandLineArgs args);
+    Application* CreateApplication(ApplicationSpecification specs);
 }
