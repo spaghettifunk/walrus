@@ -30,15 +30,15 @@ namespace Walrus
         {
             return true;
         }
-        virtual bool OnUpdate(f32 deltaTime)
+        virtual bool OnUpdate(f32)
         {
             return true;
         }
-        virtual bool OnRender(f32 deltaTime)
+        virtual bool OnRender(f32)
         {
             return true;
         }
-        virtual void OnResize(u32 width, u32 height)
+        virtual void OnResize(u32, u32)
         {
         }
 

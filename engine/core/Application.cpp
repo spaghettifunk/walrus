@@ -28,6 +28,8 @@ namespace Walrus
         if (!OnInitialize())
             return;
 
+        m_LastTime = m_Platform->GetAbsoluteTime();
+
         while (m_Running)
         {
             if (!m_Platform->PumpMessages())
@@ -36,14 +38,16 @@ namespace Walrus
                 break;
             }
 
-            // const f32 deltaTime = CalculateDeltaTime();
+            const f64 currentTime = m_Platform->GetAbsoluteTime();
+            const f32 deltaTime = static_cast<f32>(currentTime - m_LastTime);
+            m_LastTime = currentTime;
 
             if (!m_Suspended)
             {
-                if (!OnUpdate(0))
+                if (!OnUpdate(deltaTime))
                     break;
 
-                if (!OnRender(0))
+                if (!OnRender(deltaTime))
                     break;
             }
         }

@@ -2,20 +2,29 @@
 
 #include <iostream>
 
-bool GameApplication::OnInitialize()
+namespace Walrus
 {
-    return true;
-}
-bool GameApplication::OnUpdate(float deltaTime)
-{
-    return true;
-};
-bool GameApplication::OnRender(float deltaTime)
-{
-    return true;
-};
+    bool GameApplication::OnInitialize()
+    {
+        return true;
+    }
 
-void GameApplication::OnResize(u32 width, u32 height)
-{
-    return;
-};
+    bool GameApplication::OnUpdate(f32)
+    {
+        return true;
+    }
+
+    bool GameApplication::OnRender(f32)
+    {
+        return true;
+    }
+
+    void GameApplication::OnResize(u32, u32)
+    {
+    }
+
+    Application* CreateApplication(ApplicationSpecification specs)
+    {
+        return new GameApplication(specs);
+    }
+} // namespace Walrus

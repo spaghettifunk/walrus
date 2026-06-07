@@ -83,11 +83,28 @@ ENGINE_LDFLAGS := -L$(LIB_DIR) -lwalrus $(GAME_RPATH_LDFLAGS)
 METAL_LDFLAGS := -framework Metal -framework MetalKit -framework QuartzCore -framework Cocoa
 
 # Vulkan SDK paths come from the standard VULKAN_SDK environment variable.
+# If it points at an SDK that no longer exists, fall back to the latest local
+# macOS SDK installed by LunarG.
+DETECTED_VULKAN_SDK := $(shell ls -d "$(HOME)"/VulkanSDK/*/macOS 2>/dev/null | sort | tail -n 1)
+
 ifdef VULKAN_SDK
-VULKAN_CPPFLAGS := -I$(VULKAN_SDK)/include
-VULKAN_LDFLAGS := -L$(VULKAN_SDK)/lib -Wl,-rpath,$(VULKAN_SDK)/lib -lvulkan
+ifneq ($(wildcard $(VULKAN_SDK)),)
+EFFECTIVE_VULKAN_SDK := $(VULKAN_SDK)
+else ifneq ($(DETECTED_VULKAN_SDK),)
+EFFECTIVE_VULKAN_SDK := $(DETECTED_VULKAN_SDK)
+$(warning VULKAN_SDK points at missing path '$(VULKAN_SDK)'; using '$(EFFECTIVE_VULKAN_SDK)')
 else
 VULKAN_MISSING := 1
+endif
+else ifneq ($(DETECTED_VULKAN_SDK),)
+EFFECTIVE_VULKAN_SDK := $(DETECTED_VULKAN_SDK)
+else
+VULKAN_MISSING := 1
+endif
+
+ifndef VULKAN_MISSING
+VULKAN_CPPFLAGS := -I$(EFFECTIVE_VULKAN_SDK)/include
+VULKAN_LDFLAGS := -L$(EFFECTIVE_VULKAN_SDK)/lib -Wl,-rpath,$(EFFECTIVE_VULKAN_SDK)/lib -lvulkan
 endif
 
 # These targets are commands, not files to create.

@@ -1,7 +1,7 @@
 #include <engine/platform/Platform.h>
 
 // Windows platform layer.
-#if KPLATFORM_WINDOWS
+#if WPLATFORM_WINDOWS
 
 #include <engine/core/Logger.h>
 

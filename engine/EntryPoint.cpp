@@ -5,7 +5,14 @@
 
 int main(int argc, char** argv)
 {
-    auto* application = Walrus::CreateApplication({ argc, argv });
+    auto* application = Walrus::CreateApplication(
+        Walrus::ApplicationSpecification{
+            .Name = "Walrus Engine Test",
+            .StartX = 100,
+            .StartY = 100,
+            .Width = 1280,
+            .Height = 720,
+        });
     if (!application)
     {
         WFATAL("Walrus: CreateApplication returned null.");

@@ -1,19 +1,22 @@
+#pragma once
+
 #include <engine/EntryPoint.h>
 #include <engine/core/Logger.h>
 
-class GameApplication : public Walrus::Application
+namespace Walrus
 {
-public:
-    GameApplication(ApplicationCommandLineArgs args)
-        : Application(
-              ApplicationSpecification{
-                  .Name = "Walrus Engine Test", .StartX = 100, .StartY = 100, .Width = 1280, .Height = 720, .Args = args })
+    class GameApplication : public Application
     {
-    }
+    public:
+        explicit GameApplication(ApplicationSpecification specs)
+            : Application(specs)
+        {
+        }
 
-protected:
-    bool OnInitialize() override;
-    bool OnUpdate(float deltaTime) override;
-    bool OnRender(float deltaTime) override;
-    void OnResize(u32 width, u32 height) override;
-};
+    protected:
+        bool OnInitialize() override;
+        bool OnUpdate(f32 deltaTime) override;
+        bool OnRender(f32 deltaTime) override;
+        void OnResize(u32 width, u32 height) override;
+    };
+} // namespace Walrus
