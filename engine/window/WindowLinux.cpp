@@ -1,6 +1,6 @@
-#include <engine/platform/Platform.h>
+#include <engine/window/Window.h>
 
-// Linux platform layer.
+// Linux window layer.
 #if WPLATFORM_LINUX
 
 #include <engine/core/Logger.h>
@@ -9,22 +9,13 @@
 #include <X11/Xlib-xcb.h> // sudo apt-get install libxkbcommon-x11-dev
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
-#include <sys/time.h>
+#include <cstdlib>
+#include <cstring>
 #include <xcb/xcb.h>
-
-#if _POSIX_C_SOURCE >= 199309L
-#include <time.h> // nanosleep
-#else
-#include <unistd.h> // usleep
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 namespace Walrus
 {
-    struct Platform::PlatformState
+    struct Window::WindowState
     {
         Display* display = nullptr;
         xcb_connection_t* connection = nullptr;
@@ -35,8 +26,8 @@ namespace Walrus
         bool initialized = false;
     };
 
-    Platform::Platform(std::string applicationName, i32 x, i32 y, i32 width, i32 height)
-        : m_State(std::make_unique<PlatformState>())
+    Window::Window(std::string applicationName, i32 x, i32 y, i32 width, i32 height)
+        : m_State(std::make_unique<WindowState>())
     {
         // Connect to X
         m_State->display = XOpenDisplay(NULL);
@@ -112,6 +103,7 @@ namespace Walrus
             m_State->screen->root_visual,
             eventMask,
             valueList);
+        (void)cookie;
 
         // Change the title
         xcb_change_property(
@@ -161,7 +153,7 @@ namespace Walrus
         m_State->initialized = true;
     }
 
-    Platform::~Platform()
+    Window::~Window()
     {
         if (!m_State)
         {
@@ -186,7 +178,7 @@ namespace Walrus
         }
     }
 
-    bool Platform::PumpMessages()
+    bool Window::PumpMessages()
     {
         if (!m_State || !m_State->initialized)
         {
@@ -246,65 +238,6 @@ namespace Walrus
         }
         return !quitFlagged;
     }
-
-    void* Platform::Allocate(u64 size, bool aligned)
-    {
-        (void)aligned;
-        return malloc(size);
-    }
-    void Platform::Free(void* block, bool aligned)
-    {
-        (void)aligned;
-        free(block);
-    }
-    void* Platform::ZeroMemory(void* block, u64 size)
-    {
-        return memset(block, 0, size);
-    }
-    void* Platform::CopyMemory(void* dest, const void* source, u64 size)
-    {
-        return memcpy(dest, source, size);
-    }
-    void* Platform::SetMemory(void* dest, i32 value, u64 size)
-    {
-        return memset(dest, value, size);
-    }
-
-    void Platform::ConsoleWrite(std::string message, u8 colour)
-    {
-        // FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-        std::string colourStrings[] = { "0;41", "1;31", "1;33", "1;32", "1;34", "1;30" };
-        printf("\033[%sm%s\033[0m", colourStrings[colour].c_str(), message.c_str());
-    }
-    void Platform::ConsoleWriteError(std::string message, u8 colour)
-    {
-        // FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-        std::string colourStrings[] = { "0;41", "1;31", "1;33", "1;32", "1;34", "1;30" };
-        printf("\033[%sm%s\033[0m", colourStrings[colour].c_str(), message.c_str());
-    }
-
-    double Platform::GetAbsoluteTime()
-    {
-        struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
-        return now.tv_sec + now.tv_nsec * 0.000000001;
-    }
-
-    void Platform::Sleep(u64 ms)
-    {
-#if _POSIX_C_SOURCE >= 199309L
-        struct timespec ts;
-        ts.tv_sec = ms / 1000;
-        ts.tv_nsec = (ms % 1000) * 1000 * 1000;
-        nanosleep(&ts, 0);
-#else
-        if (ms >= 1000)
-        {
-            sleep(ms / 1000);
-        }
-        usleep((ms % 1000) * 1000);
-#endif
-    }
-
 } // namespace Walrus
+
 #endif

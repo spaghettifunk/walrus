@@ -1,30 +1,26 @@
-#include <engine/platform/Platform.h>
+#include <engine/window/Window.h>
 
-// Windows platform layer.
+// Windows window layer.
 #if WPLATFORM_WINDOWS
 
 #include <engine/core/Logger.h>
 
-#include <stdlib.h>
+#include <cstring>
 #include <windows.h>
 #include <windowsx.h> // param input extraction
 
 namespace Walrus
 {
-    struct Platform::PlatformState
+    struct Window::WindowState
     {
         HINSTANCE hInstance = nullptr;
         HWND hwnd = nullptr;
     };
 
-    // Clock
-    static double clockFrequency;
-    static LARGE_INTEGER startTime;
+    LRESULT CALLBACK Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lParam);
 
-    LRESULT CALLBACK win32ProcessMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM l_param);
-
-    Platform::Platform(std::string applicationName, i32 x, i32 y, i32 width, i32 height)
-        : m_State(std::make_unique<PlatformState>())
+    Window::Window(std::string applicationName, i32 x, i32 y, i32 width, i32 height)
+        : m_State(std::make_unique<WindowState>())
     {
         m_State->hInstance = GetModuleHandleA(0);
 
@@ -33,7 +29,7 @@ namespace Walrus
         WNDCLASSA wc;
         memset(&wc, 0, sizeof(wc));
         wc.style = CS_DBLCLKS; // Get double-clicks
-        wc.lpfnWndProc = win32ProcessMessage;
+        wc.lpfnWndProc = Win32ProcessMessage;
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
         wc.hInstance = m_State->hInstance;
@@ -80,7 +76,7 @@ namespace Walrus
         HWND handle = CreateWindowExA(
             windowExStyle,
             "walrus_window_class",
-            applicationName,
+            applicationName.c_str(),
             windowStyle,
             windowX,
             windowY,
@@ -108,15 +104,9 @@ namespace Walrus
         // If initially minimized, use SW_MINIMIZE : SW_SHOWMINNOACTIVE;
         // If initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE
         ShowWindow(m_State->hwnd, showWindowCommandFlags);
-
-        // Clock setup
-        LARGE_INTEGER frequency;
-        QueryPerformanceFrequency(&frequency);
-        clockFrequency = 1.0 / (f64)frequency.QuadPart;
-        QueryPerformanceCounter(&startTime);
     }
 
-    Platform::~Platform()
+    Window::~Window()
     {
         if (m_State->hwnd)
         {
@@ -125,7 +115,7 @@ namespace Walrus
         }
     }
 
-    bool Platform::PumpMessages()
+    bool Window::PumpMessages()
     {
         MSG message;
         while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE))
@@ -137,68 +127,7 @@ namespace Walrus
         return true;
     }
 
-    void* Platform::Allocate(u64 size, bool aligned)
-    {
-        return malloc(size);
-    }
-
-    void Platform::Free(void* block, bool aligned)
-    {
-        free(block);
-    }
-
-    void* Platform::ZeroMemory(void* block, u64 size)
-    {
-        return memset(block, 0, size);
-    }
-
-    void* Platform::CopyMemory(void* dest, const void* source, u64 size)
-    {
-        return memcpy(dest, source, size);
-    }
-
-    void* Platform::SetMemory(void* dest, i32 value, u64 size)
-    {
-        return memset(dest, value, size);
-    }
-
-    void Platform::ConsoleWrite(std::string message, u8 colour)
-    {
-        HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-        // FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-        static u8 levels[6] = { 64, 4, 6, 2, 1, 8 };
-        SetConsoleTextAttribute(consoleHandle, levels[colour]);
-        OutputDebugStringA(message);
-        u64 length = strlen(message);
-        LPDWORD numberWritten = 0;
-        WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), message, (DWORD)length, numberWritten, 0);
-    }
-
-    void Platform::ConsoleWriteError(std::string message, u8 colour)
-    {
-        HANDLE consoleHandle = GetStdHandle(STD_ERROR_HANDLE);
-        // FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-        static u8 levels[6] = { 64, 4, 6, 2, 1, 8 };
-        SetConsoleTextAttribute(consoleHandle, levels[colour]);
-        OutputDebugStringA(message);
-        u64 length = strlen(message);
-        LPDWORD numberWritten = 0;
-        WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, numberWritten, 0);
-    }
-
-    double Platform::GetAbsoluteTime()
-    {
-        LARGE_INTEGER nowTime;
-        QueryPerformanceCounter(&nowTime);
-        return (double)nowTime.QuadPart * clockFrequency;
-    }
-
-    void Platform::Sleep(u64 ms)
-    {
-        Sleep(ms);
-    }
-
-    LRESULT CALLBACK win32ProcessMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lParam)
+    LRESULT CALLBACK Win32ProcessMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lParam)
     {
         switch (msg)
         {
@@ -266,4 +195,5 @@ namespace Walrus
         return DefWindowProcA(hwnd, msg, wParam, lParam);
     }
 } // namespace Walrus
-#endif // KPLATFORM_WINDOWS
+
+#endif // WPLATFORM_WINDOWS

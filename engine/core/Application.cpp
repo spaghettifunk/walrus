@@ -1,5 +1,7 @@
 #include <engine/core/Application.h>
 #include <engine/core/Logger.h>
+#include <engine/platform/Platform.h>
+#include <engine/window/Window.h>
 
 #include <iostream>
 
@@ -22,23 +24,23 @@ namespace Walrus
         WTRACE("A test message: %f", 3.14f);
 
         m_Running = true;
-        m_Platform = std::make_unique<Platform>(
+        m_Window = std::make_unique<Window>(
             m_Specification.Name, m_Specification.StartX, m_Specification.StartY, m_Specification.Width, m_Specification.Height);
 
         if (!OnInitialize())
             return;
 
-        m_LastTime = m_Platform->GetAbsoluteTime();
+        m_LastTime = Platform::GetAbsoluteTime();
 
         while (m_Running)
         {
-            if (!m_Platform->PumpMessages())
+            if (!m_Window->PumpMessages())
             {
                 m_Running = false;
                 break;
             }
 
-            const f64 currentTime = m_Platform->GetAbsoluteTime();
+            const f64 currentTime = Platform::GetAbsoluteTime();
             const f32 deltaTime = static_cast<f32>(currentTime - m_LastTime);
             m_LastTime = currentTime;
 

@@ -1,10 +1,14 @@
 #pragma once
 
 #include <engine/Defines.h>
-#include <engine/platform/Platform.h>
+
+#include <memory>
+#include <string>
 
 namespace Walrus
 {
+    class Window;
+
     struct ApplicationSpecification
     {
         std::string Name = "Walrus";
@@ -44,7 +48,7 @@ namespace Walrus
 
     private:
         ApplicationSpecification m_Specification;
-        std::unique_ptr<Platform> m_Platform;
+        std::unique_ptr<Window> m_Window;
         bool m_Running = false;
         bool m_Suspended = false;
         f64 m_LastTime = 0.0;
